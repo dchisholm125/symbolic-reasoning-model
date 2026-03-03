@@ -5,3 +5,4 @@ numpy<2
 scipy
 gymnasium
 stable-baselines3
+llama-cpp-python

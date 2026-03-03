@@ -42,7 +42,7 @@ class SRM_Layer1_Env(gym.Env):
         self.time_step += 1
         self.prev_price = self.current_price
         
-        trend = 145.0 + 5.0 * math.sin(self.time_step * 0.1)
+        trend = 84.80 + 5.0 * math.sin(self.time_step * 0.1)
         noise = random.uniform(-0.2, 0.2)
         self.current_price = round(trend + noise, 2)
         
@@ -120,7 +120,8 @@ if __name__ == "__main__":
     model = DQN("MlpPolicy", env, learning_rate=1e-3, buffer_size=100000, exploration_fraction=0.6, verbose=0)
     print("🧬 Training Neuro-Symbolic Agent (DQN) for 250,000 steps...")
     model.learn(total_timesteps=250000) 
-    print("✅ Training Complete.")
+    model.save("dqn_srm_model") # Save the learned weights to disk!
+    print("✅ Training Complete & Brain Saved.")
     print("-" * 75)
 
     print("⚡ Executing Trained Agent on Live Sensory Stream (Hot Path):")
