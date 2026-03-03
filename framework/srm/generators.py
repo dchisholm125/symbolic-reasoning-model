@@ -45,9 +45,8 @@ class SLM_Node:
             try:
                 self.llm = Llama(
                     model_path=model_path,
-                    n_ctx=n_ctx,
+                    n_ctx=256,
                     n_gpu_layers=n_gpu_layers,
-                    n_threads=4, # Use CPU threads as fallback to prevent hangs
                     verbose=False
                 )
                 self.is_loaded = True
