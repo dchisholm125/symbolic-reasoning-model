@@ -1,0 +1,7 @@
+transformers 
+optimum[onnxruntime]
+onnxruntime 
+numpy<2
+scipy
+gymnasium
+stable-baselines3
