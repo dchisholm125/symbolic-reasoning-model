@@ -1,0 +1,104 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+import time
+import json
+import asyncio
+
+from framework.srm.llm_backend import LLMBackend
+
+app = FastAPI()
+
+# Allow the Vue frontend to talk to this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------------------------
+# Boot the LLM backend (driven by env vars: LLM_BACKEND, LLM_API_URL, etc.)
+# ---------------------------------------------------------------------------
+print("[System] Initializing LLM Backend...")
+llm = LLMBackend()
+
+if llm.is_loaded:
+    print("[System] LLM Backend Ready.")
+else:
+    print("[System] WARNING: LLM Backend not fully loaded. Running in degraded mode.")
+
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+async def generate_llm_stream(prompt: str, max_tokens: int, temperature: float, stop_tokens: list):
+    """Helper to stream tokens from the LLM backend."""
+    if not llm.is_loaded:
+        # Mock streaming
+        yield f"data: {json.dumps({'event': 'debug', 'content': 'RAW PROMPT: ' + prompt})}\n\n"
+        await asyncio.sleep(0.5)
+        mock_text = "MOCK: Based on current trends, the recommendation is to monitor for further signals..."
+        for word in mock_text.split():
+            yield f"data: {json.dumps({'event': 'token', 'content': word + ' '})}\n\n"
+            await asyncio.sleep(0.1)
+        yield f"data: {json.dumps({'event': 'done', 'latency': 2.0})}\n\n"
+        return
+
+    t_start = time.perf_counter()
+    yield f"data: {json.dumps({'event': 'debug', 'content': 'RAW PROMPT SENT TO LLM: ' + prompt[:200]})}\n\n"
+
+    # Stream from the backend (works for API, Ollama, or llama_cpp)
+    loop = asyncio.get_running_loop()
+
+    def _do_stream():
+        tokens = []
+        for token in llm.stream(prompt, max_tokens=max_tokens, temperature=temperature, stop=stop_tokens):
+            tokens.append(token)
+        return tokens
+
+    # Run blocking stream in executor to not block the event loop
+    tokens = await loop.run_in_executor(None, _do_stream)
+
+    for token in tokens:
+        yield f"data: {json.dumps({'event': 'token', 'content': token})}\n\n"
+
+    t_time = time.perf_counter() - t_start
+    yield f"data: {json.dumps({'event': 'done', 'latency': round(t_time, 2)})}\n\n"
+
+
+@app.post("/api/chat/traditional")
+async def chat_traditional(request: ChatRequest):
+    history = [{'tick': i, 'price': 84.00 + (i * 0.1), 'fee': 5000} for i in range(20)]
+    im_s = '<' + '|im_start|' + '>'
+    im_e = '<' + '|im_end|' + '>'
+    traditional_prompt = (
+        f"{im_s}system\nYou are an autonomous trading AI. Analyze the market history and answer the user.{im_e}\n"
+        f"{im_s}user\nHere is the recent market history:\n{json.dumps(history)}\n\n"
+        f"The current price is $86.00 and the fee is 5000. User asks: '{request.message}'. What should we do?{im_e}\n"
+        f"{im_s}assistant\n"
+    )
+    return StreamingResponse(
+        generate_llm_stream(traditional_prompt, 150, 0.1, [im_e]),
+        media_type="text/event-stream"
+    )
+
+
+@app.post("/api/chat/srm")
+async def chat_srm(request: ChatRequest):
+    srm_state = {'action': 'SELL', 'pnl': '+$4.50', 'portfolio': 1004.50, 'reason': 'Momentum Negative'}
+    im_s = '<' + '|im_start|' + '>'
+    im_e = '<' + '|im_end|' + '>'
+    srm_prompt = (
+        f"{im_s}system\nYou are a strict terminal. Summarize state in 1 short sentence.{im_e}\n"
+        f"{im_s}user\nSTATE:\n{json.dumps(srm_state)}\n\nUSER SAID: {request.message}\nREPORT:{im_e}\n"
+        f"{im_s}assistant\n"
+    )
+    return StreamingResponse(
+        generate_llm_stream(srm_prompt, 50, 0.0, [im_e]),
+        media_type="text/event-stream"
+    )
+

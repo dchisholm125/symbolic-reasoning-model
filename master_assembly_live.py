@@ -108,7 +108,7 @@ async def main():
     brain = RL_LogicEngine(model_path="./dqn_srm_model.zip", environment=LivePaperTradingEnv(nerve))
     
     # 3. Mouth (Quantized SLM)
-    mouth = SLM_Node(model_path="./qwen2.5-1.5b-instruct-q4_k_m.gguf", n_gpu_layers=-1)
+    mouth = SLM_Node(model_path="./qwen2.5-0.5b-instruct-q4_k_m.gguf", n_gpu_layers=-1)
     
     # 5. Framework
     strict_prompt = "You are a quantitative trading bot. Output EXACTLY ONE concise sentence summarizing the portfolio state. DO NOT repeat yourself. DO NOT use emojis."

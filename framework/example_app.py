@@ -13,7 +13,7 @@ class MyLogic(LogicEngine):
         return None
 
 # 3. Define the Mouth (Layer 3)
-mouth = SLM_Node(model_path="./qwen2.5-1.5b-instruct-q4_k_m.gguf")
+mouth = SLM_Node(model_path="./qwen2.5-0.5b-instruct-q4_k_m.gguf")
 
 # 4. Wire the Framework constraints
 agent = Framework(

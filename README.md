@@ -1,3 +1,9 @@
+# CORE THESIS
+
+__Transformers (LLMs) are probabilistic pattern matchers, not calculators or state machines. If we force an LLM to do math, logic, or memory-tracking, its quality degrades and its latency spikes. If we let Python do the math/logic (SRM) and only use the LLM to speak, we get mathematically perfect quality at maximum speed.__
+
+__**Produce the deep, strategic insights of a 1-trillion parameter model using a fraction of the compute, latency, and VRAM.**__
+
 # SRM: The Symbolic Reasoning Model Framework
 
 A local-first, neuro-symbolic AI framework designed to run on 6GB of VRAM.

@@ -10,7 +10,7 @@ def run_benchmark():
     # Load the model exactly as we do in the framework
     print("Loading Model into VRAM...")
     llm = Llama(
-        model_path="./qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        model_path="./qwen2.5-0.5b-instruct-q4_k_m.gguf",
         n_ctx=2048, # We need a larger context window for the Traditional test
         n_gpu_layers=-1,
         verbose=False

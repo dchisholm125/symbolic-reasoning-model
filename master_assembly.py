@@ -58,7 +58,7 @@ async def main():
     brain = RL_LogicEngine(model_path="./dqn_srm_model", environment=MockEnv())
     
     # 3. Initialize the Mouth (Will fall back to simulated response if .gguf is missing)
-    mouth = SLM_Node(model_path="./qwen2.5-1.5b-instruct-q4_k_m.gguf")
+    mouth = SLM_Node(model_path="./qwen2.5-0.5b-instruct-q4_k_m.gguf")
     
     # 4. Orchestrate
     agent = Framework(ear=ear, brain=brain, mouth=mouth)
